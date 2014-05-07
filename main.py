@@ -2,13 +2,12 @@
     main.py  
     Responsible for all GUI setup.
 
-    Author: Esteban Porres
-
 """
 
 import sys
 
 from ui_mainwindow import Ui_MainWindow
+from dialog_custom import CustomDialog
 
 from PySide.QtCore import (QFile)
 from PySide.QtUiTools import (QUiLoader)
@@ -34,7 +33,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def startClient(self): pass
     def stopSimulation(self): pass
     def randomBall(self): pass
-    def customBall(self): pass
+    
+    def customBall(self):
+        # create dialog for input
+        dialog = CustomDialog()
+        results = []
+
+        # retrieve input from dialog
+        if (dialog.exec_()):
+            results = dialog.results
+        
+        # print retrieved values
+        for value in results:
+            print(value)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
