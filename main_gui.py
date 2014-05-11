@@ -9,7 +9,7 @@ import sys, threading, Queue
 from ui_mainwindow import Ui_MainWindow
 from dialog_custom import CustomDialog
 from server import ServerThread
-from client import Client, ClientThread, data
+from client import ClientThread
 
 from PySide.QtCore import (QFile)
 from PySide.QtUiTools import (QUiLoader)
@@ -26,7 +26,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.io_handlers()      # initialize UI components
 
         # communication/network variables
-        self.condition = threading.Condition()
         self.queue = Queue.Queue()
         self.data = "meaningless"
         
@@ -42,24 +41,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def startServer(self):
         self.btn_start_client.setEnabled(False)     # disable 'client' button
-        self.mode = ServerThread()
+        self.mode = ServerThread(self.queue)
         self.mode.daemon = True
         self.mode.start()
 
 
     def startClient(self):
         self.btn_start_server.setEnabled(False)     # disable 'server' button
-        self.mode = ClientThread(self.data,self.condition,self.queue)
+        self.mode = ClientThread(self.data,self.queue)
         self.mode.daemon = True
         self.mode.start()
 
 
     def stopSimulation(self):
-        self.mode = None    # signal stop of simulation
-
         # reenable both 'server'/'client' buttons
         self.btn_start_server.setEnabled(True)
         self.btn_start_client.setEnabled(True)
+        self.mode._Thread__stop()
+        print 'Thread stopped'
 
 
     def randomBall(self): pass
