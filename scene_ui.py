@@ -38,9 +38,11 @@ class SceneManager():
 		values = []
 
 		# traverses delimeters to extract values
+		print('Message received: ' + str(msg))
 		for i in range(len(delims)):
 			index = msg.index(delims[i])			# search for delimeter
 			arg = msg[index + len(delims[i]) :]		# extract value
+			print('Argument: '+str(arg))
 			values.append(int(arg))					# store value
 			msg = msg[:index]				# reduce message left to parse
 		

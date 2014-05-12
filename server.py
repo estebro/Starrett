@@ -18,15 +18,15 @@ class ServeClientThread(threading.Thread):
 		print 'Connection from: '+str(self.ip)+':'+str(self.port)
 
 		self.socket.send('Welcome to the server.')
-		data = ''
+		data = 'START'
 		
 		while True:		# loop while socket is alive
 			try:
-				while (data != ''):		# wait for data from client
-					print 'Client ('+str(self.port)+') sent: '+data+' size: '+str(len(data))
-					self.socket.send('You sent me:'+data)
-					self.server_queue.put(data)
-					data = self.socket.recv(2048)
+				while (data != ''):			# wait for data from client
+					if (data != 'START'):	# check for starting condition
+						print 'Client ('+str(self.port)+') sent: '+data+' size: '+str(len(data))
+						self.server_queue.put(data)		# pass data to server main thread
+					data = self.socket.recv(2048)	# read more data
 			except Exception:	# handle broken connection
 				print 'Client disconnected.'
 				self.socket.close()		# properly close socket
@@ -74,13 +74,16 @@ class ServerThread(threading.Thread):
 				print '\nListening for incomming connections...'
 			
 			# check for messages from main_gui thread
-			if ( (not self.tcp_main_queue.empty()) ): #or (not self.client_queue.empty()) ):
+			if (not self.tcp_main_queue.empty()):
 				# if message, broadcast to all client threads
 				item = self.tcp_main_queue.get()
+				self.tcp_sim_queue.put(item)
 				self.broadcast(item)
 				print ('Broadcast: ' + item)
-			
-			#print ('Number of threads: ' + str(len(self.threads)))
+			elif (not self.client_queue.empty()):
+				item = self.client_queue.get()
+				self.tcp_sim_queue.put(item)
+				self.broadcast(item)
 		
 
 	# sends data to all tcp clients

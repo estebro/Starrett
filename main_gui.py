@@ -139,7 +139,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # input in queue for tcp thread
         if (len(self.data) > 0):
             self.tcp_main_queue.put(self.data)
-            self.tcp_sim_queue.put(self.data)
         
 
 
