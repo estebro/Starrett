@@ -1,12 +1,17 @@
 import socket, threading, Queue, select
 
+"""
+	Responsible for handling all client/server interaction
+	on the server side once connection is established.
+"""
 class ServeClientThread(threading.Thread):
 
-	def __init__(self,ip,port,socket):
+	def __init__(self,ip,port,socket,queue):
 		threading.Thread.__init__(self)
 		self.ip = ip
 		self.port = port
 		self.socket = socket
+		self.server_queue = queue
 		print '[+] New thread started for '+str(ip)+':'+str(port)
 
 	def run(self):
@@ -20,6 +25,7 @@ class ServeClientThread(threading.Thread):
 				while (data != ''):		# wait for data from client
 					print 'Client ('+str(self.port)+') sent: '+data+' size: '+str(len(data))
 					self.socket.send('You sent me:'+data)
+					self.server_queue.put(data)
 					data = self.socket.recv(2048)
 			except Exception:	# handle broken connection
 				print 'Client disconnected.'
@@ -27,13 +33,19 @@ class ServeClientThread(threading.Thread):
 				break 		# exit wait-loop
 
 
+"""
+	Responsible for handling the setup of client/server
+	connections via TCP.
+"""
 class ServerThread(threading.Thread):
 
-	def __init__(self, thread_queue):
+	def __init__(self, tcp_queue, sim_queue):
 		threading.Thread.__init__(self)
 		self.host = '127.0.0.1'
 		self.port = 3333
-		self.queue = thread_queue
+		self.tcp_main_queue = tcp_queue
+		self.tcp_sim_queue = sim_queue
+		self.client_queue = Queue.Queue()
 
 	def run(self):
 		# creating a socket on which server responds
@@ -55,21 +67,23 @@ class ServerThread(threading.Thread):
 				(clientsock, (ip,retPort)) = client.accept()
 				
 				# initiate client thread on server
-				newthread = ServeClientThread(ip,retPort,clientsock)
+				newthread = ServeClientThread(ip,retPort,clientsock,self.client_queue)
+				newthread.daemon = True
 				newthread.start()
 				self.threads.append(newthread)
 				print '\nListening for incomming connections...'
 			
 			# check for messages from main_gui thread
-			if (not self.queue.empty()):
+			if ( (not self.tcp_main_queue.empty()) ): #or (not self.client_queue.empty()) ):
 				# if message, broadcast to all client threads
-				self.broadcast(self.queue.get())
+				item = self.tcp_main_queue.get()
+				self.broadcast(item)
+				print ('Broadcast: ' + item)
 			
-			print ('Number of threads: ' + str(len(self.threads)))
+			#print ('Number of threads: ' + str(len(self.threads)))
 		
-		for t in self.threads:
-			t.join()
 
+	# sends data to all tcp clients
 	def broadcast(self,msg):
 		for t in self.threads:
 			t.socket.send(msg)
