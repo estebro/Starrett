@@ -2,7 +2,7 @@ import time, socket, threading
 
 class ClientThread(threading.Thread):
 
-	def __init__(self, data, main_queue, sim_queue):
+	def __init__(self, data, main_queue, sim_queue, event):
 		threading.Thread.__init__(self)
 		self.host = '127.0.0.1'
 		self.port = 3333
@@ -10,6 +10,7 @@ class ClientThread(threading.Thread):
 		self.data_recv = ''
 		self.tcp_main_queue = main_queue
 		self.tcp_sim_queue = sim_queue
+		self.thread_event = event
 
 		# setting up the socket (non-blocking)
 		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -37,7 +38,10 @@ class ClientThread(threading.Thread):
 
 	def run(self):
 		
-		while True:
+		# request to be caught up with simulation
+		#self.sendUpdate("UPDATE_ME")	# send to server
+
+		while (not self.thread_event.is_set()):
 			try:
 				self.checkForUpdate()	# retrieve data from server
 				print ('Received scenario update: ' + self.data_recv)

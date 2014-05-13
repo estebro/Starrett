@@ -24,11 +24,11 @@ class ServeClientThread(threading.Thread):
 			try:
 				while (data != ''):			# wait for data from client
 					if (data != 'START'):	# check for starting condition
-						print 'Client ('+str(self.port)+') sent: '+data+' size: '+str(len(data))
+						print 'Client ('+str(self.port)+') sent: '+data+'.'
 						self.server_queue.put(data)		# pass data to server main thread
 					data = self.socket.recv(2048)	# read more data
 			except Exception:	# handle broken connection
-				print 'Client disconnected.'
+				print 'Client ('+str(self.port)+') disconnected.'
 				self.socket.close()		# properly close socket
 				break 		# exit wait-loop
 
@@ -39,13 +39,14 @@ class ServeClientThread(threading.Thread):
 """
 class ServerThread(threading.Thread):
 
-	def __init__(self, tcp_queue, sim_queue):
+	def __init__(self, tcp_queue, sim_queue, event):
 		threading.Thread.__init__(self)
 		self.host = '127.0.0.1'
 		self.port = 3333
 		self.tcp_main_queue = tcp_queue
 		self.tcp_sim_queue = sim_queue
 		self.client_queue = Queue.Queue()
+		self.thread_event = event
 
 	def run(self):
 		# creating a socket on which server responds
@@ -57,7 +58,7 @@ class ServerThread(threading.Thread):
 		self.threads = []
 
 		print '\nListening for incoming connections...'
-		while True:
+		while (not self.thread_event.is_set()):
 
 			# scan for sockets ready to be read (with 1 sec timeout)
 			clients_read, wlist, xlist = select.select([self.tcpsocket],[],[],1)
@@ -71,7 +72,7 @@ class ServerThread(threading.Thread):
 				newthread.daemon = True
 				newthread.start()
 				self.threads.append(newthread)
-				print '\nListening for incomming connections...'
+				print '\nListening for incoming connections...'
 			
 			# check for messages from main_gui thread
 			if (not self.tcp_main_queue.empty()):

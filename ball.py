@@ -9,10 +9,16 @@ from PySide.QtGui import (QGraphicsEllipseItem)
 class Ball(QGraphicsEllipseItem):
 	def __init__(self, x_pos, y_pos, mass, radius):
 		super(Ball,self).__init__(x_pos,y_pos,2*radius,2*radius)
+		
+		# object's current position (global coordinates)
 		self.x_pos = x_pos
-		self.x_start = x_pos
 		self.y_pos = y_pos
+
+		# object's starting position (global coordinates)
+		self.x_start = x_pos
 		self.y_start = y_pos
+
+
 		self.radius = radius
 		self.mass = mass
 
@@ -32,5 +38,5 @@ class Ball(QGraphicsEllipseItem):
 		self.y_vel = y_vel
 
 	def __str__(self):
-		return 'Ball at ('+str(self.x_pos)+','+str(self.y_pos)+') with velocity ' + \
-					str(self.x_vel)+' .x. + '+str(self.y_vel)+' .y.'
+		return 'x' + str(self.x_pos) + 'y' + str(self.y_pos) + 'xv' + str(self.x_vel) + \
+				'yv' + str(self.y_vel) + 'm' + str(self.mass) + 'r' + str(self.radius)

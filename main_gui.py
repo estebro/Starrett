@@ -5,7 +5,7 @@
 
 """
 
-import sys, Queue
+import sys, random, threading, Queue
 
 from ui_mainwindow import Ui_MainWindow
 from dialog_custom import CustomDialog
@@ -17,6 +17,8 @@ from scene_ui import SceneManager
 from PySide.QtCore import (QTimer, QTimeLine, QPointF)
 from PySide.QtGui import *
 
+SCENE_WIDTH = 579
+SCENE_HEIGHT = 309
 ANIMATOR_TIMEOUT = 100      # graphics update intveral
 
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -24,18 +26,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__(parent)
         self.setupUi(self)
 
+        self.run = True
         self.mode = None        # signals 'server'/'client' mode
         self.input_values = []  # input values retrieve from UI
         self.io_handlers()      # initialize UI components
 
         # communication/network variables
         self.tcp_main_queue = Queue.Queue()
-        # self.setup_physics()
+        self.tcp_sim_queue = Queue.Queue()
+        self.thread_event = threading.Event()
         self.data = "meaningless"
 
-        self.tcp_sim_queue = Queue.Queue()
         self.cm = SceneManager(self.graphicsView, self.tcp_sim_queue)
-        # self.cm.populate()
 
         self.animations = []
         self.animator = QTimer()    # timer paired with main thread
@@ -71,33 +73,34 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             return animation
 
-        # check for items received via tcp
-        if (not self.tcp_sim_queue.empty()):
-            item = self.tcp_sim_queue.get() # retrieve value
-            self.cm.addItem(item)           # add new item
+        if (self.run):   # still 
+            # check for items received via tcp
+            if (not self.tcp_sim_queue.empty()):
+                item = self.tcp_sim_queue.get() # retrieve value
+                self.cm.addItem(item)           # add new item
 
-        del self.animations[:]  # empty list of prev animations
+            del self.animations[:]  # empty list of prev animations
 
 
-        for item in self.cm.getItems(): # all items in graphicsView
+            for item in self.cm.getItems(): # all items in graphicsView
 
-            next_x, next_y = self.cm.next_move(item)    # determine next location
-            # create corresponding item animation (given displacement in local coordinates)
-            item_animation = config_animate_to(1,item,next_x,next_y)
-            self.animations.append(item_animation)      # store item animation
+                next_x, next_y = self.cm.next_move(item)    # determine next location
+                # create corresponding item animation (given displacement in local coordinates)
+                item_animation = config_animate_to(1,item,next_x,next_y)
+                self.animations.append(item_animation)      # store item animation
 
-            # update location values of item (global coordiantes)
-            item.set_location(next_x+item.x_start,next_y+item.y_start)
+                # update location values of item (global coordiantes)
+                item.set_location(next_x+item.x_start,next_y+item.y_start)
 
-        # signal the start of all animations
-        [ animation.timeLine().start() for animation in self.animations]
-        self.animator.start(ANIMATOR_TIMEOUT)   # reset timeout
+            # signal the start of all animations
+            [ animation.timeLine().start() for animation in self.animations]
+            self.animator.start(ANIMATOR_TIMEOUT)   # reset timeout
 
 
     def startServer(self):
         self.btn_start_client.setEnabled(False)     # disable 'client' button
         # initiate server thread and pass GUI/simulation messgae queues
-        self.mode = ServerThread(self.tcp_main_queue,self.tcp_sim_queue)
+        self.mode = ServerThread(self.tcp_main_queue,self.tcp_sim_queue,self.thread_event)
         self.mode.daemon = True
         self.mode.start()
 
@@ -105,22 +108,42 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def startClient(self):
         self.btn_start_server.setEnabled(False)     # disable 'server' button
         # initiate client thread and pass GUI/simulation message queues
-        self.mode = ClientThread(self.data,self.tcp_main_queue,self.tcp_sim_queue)
+        self.mode = ClientThread(self.data,self.tcp_main_queue,self.tcp_sim_queue,self.thread_event)
         self.mode.daemon = True     # thread to close when main thread closes
         self.mode.start()
 
 
     def stopSimulation(self):
-        # reenable both 'server'/'client' buttons
-        self.btn_start_server.setEnabled(True)
-        self.btn_start_client.setEnabled(True)
-        self.mode._Thread__stop()
+        # disable all buttons
+        self.btn_start_server.setEnabled(False)
+        self.btn_start_client.setEnabled(False)
+        self.btn_stop.setEnabled(False)
+        self.btn_random_ball.setEnabled(False)
+        self.btn_custom_ball.setEnabled(False)
+        
+        self.run = False
+        self.thread_event.set()
         print 'Thread stopped'
 
 
-    def randomBall(self): pass
+    def randomBall(self):
 
-    
+        # select random radius, mass, x/y velocities
+        radius = random.randint(0,50)
+        mass = random.randint(0,100)
+        x_vel = random.randint(0,30)
+        y_vel = random.randint(0,30)
+
+        # select x/y positions within graphicsView
+        x_pos = random.randint(0,SCENE_WIDTH-radius)
+        y_pos = random.randint(0,SCENE_HEIGHT-radius)
+
+        # encode data for TCP transport
+        self.data = 'x' + str(x_pos) + 'y' + str(y_pos) + 'xv' + str(x_vel) + \
+                    'yv' + str(y_vel) + 'm' + str(mass) + 'r' + str(radius)
+        self.tcp_main_queue.put(self.data)
+
+        
 
     def customBall(self):
         # create dialog for input
