@@ -52,8 +52,15 @@ class ClientThread(threading.Thread):
 				if (not self.tcp_main_queue.empty()):
 					# retrieves input from thread queue
 					self.data_send = self.tcp_main_queue.get()	# waits if none
-					print 'Data sent @ tcp_client: ' + self.data_send
-					self.sendUpdate(self.data_send)	# to server
+					try:	# attempts to send data to server
+						self.sendUpdate(self.data_send)	# to server
+						print 'Data sent @ tcp_client: ' + self.data_send
+					except Exception:
+						print '\nConnection with server has been lost.'
+						break 	# finish thread execution
+
+		print 'Thread has been closed.'
+
 
 								
 

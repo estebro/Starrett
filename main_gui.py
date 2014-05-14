@@ -92,6 +92,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 # update location values of item (global coordiantes)
                 item.set_location(next_x+item.x_start,next_y+item.y_start)
 
+                # print ('Executed next_move() for ' + str(item))
             # signal the start of all animations
             [ animation.timeLine().start() for animation in self.animations]
             self.animator.start(ANIMATOR_TIMEOUT)   # reset timeout
@@ -106,11 +107,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
 
     def startClient(self):
-        self.btn_start_server.setEnabled(False)     # disable 'server' button
-        # initiate client thread and pass GUI/simulation message queues
-        self.mode = ClientThread(self.data,self.tcp_main_queue,self.tcp_sim_queue,self.thread_event)
-        self.mode.daemon = True     # thread to close when main thread closes
-        self.mode.start()
+        
+        try:
+            # initiate client thread and pass GUI/simulation message queues
+            self.mode = ClientThread(self.data,self.tcp_main_queue,self.tcp_sim_queue,self.thread_event)
+            self.mode.daemon = True     # thread to close when main thread closes
+            self.mode.start()
+
+            self.btn_start_server.setEnabled(False) # disable 'server' button
+        except Exception:
+            print "No server available."
 
 
     def stopSimulation(self):
@@ -123,16 +129,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         self.run = False
         self.thread_event.set()
-        print 'Thread stopped'
+        print 'Main thread stopped'
 
 
     def randomBall(self):
 
         # select random radius, mass, x/y velocities
-        radius = random.randint(0,50)
-        mass = random.randint(0,100)
-        x_vel = random.randint(0,30)
-        y_vel = random.randint(0,30)
+        mass = random.randint(5, 40)
+        radius = int(mass * 1.5)
+        x_vel = random.randint(1,30)
+        y_vel = random.randint(1,30)
 
         # select x/y positions within graphicsView
         x_pos = random.randint(0,SCENE_WIDTH-radius)
@@ -141,8 +147,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # encode data for TCP transport
         self.data = 'x' + str(x_pos) + 'y' + str(y_pos) + 'xv' + str(x_vel) + \
                     'yv' + str(y_vel) + 'm' + str(mass) + 'r' + str(radius)
-        self.tcp_main_queue.put(self.data)
 
+        self.tcp_main_queue.put(self.data)
         
 
     def customBall(self):

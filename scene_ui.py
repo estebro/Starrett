@@ -54,19 +54,32 @@ class SceneManager():
 	# determine an item's next location
 	def next_move(self,item):
 		
-		# determine if a wall will be hit in the next move
-		hit_wall = self.cm.if_wall_collision(item,SCENE_HEIGHT,SCENE_WIDTH)
-
-
-		if (hit_wall != 'NONE'):	# if wall collision will occur
-			# determine displacement left to collide with wall
-			delta_x, delta_y = self.cm.vel_to_wall(item,hit_wall,SCENE_HEIGHT,SCENE_WIDTH)
-			# set object's velocity after impacting the wall
-			self.cm.ball_to_wall(item,hit_wall)
+		# check whether any ball-to-ball collisions will occur
+		collisions = self.cm.if_ball_collision(item,self.getItems())
+		
+		if (len(collisions) > 0):	# colllision identified
+			print '\nInside next_move()'
+			print ('Item: ' + str(item) + ' List: ' )#+ str(collisions))
+			for ball in collisions:
+				print str(ball)
+			# obtain velocities so that balls just collide
+			delta_x, delta_y = self.cm.vel_to_ball(item,collisions[0])
+			# delta_x = item.x_vel
+			# delta_y = item.y_vel
+			self.cm.ball_to_ball(item,collisions[0])
 		else:
-			#keep the ball in the same trajectory
-			delta_x = item.x_vel
-			delta_y = item.y_vel
+			# determine if a wall will be hit in the next move
+			hit_wall = self.cm.if_wall_collision(item,SCENE_HEIGHT,SCENE_WIDTH)
+
+			if (hit_wall != 'NONE'):	# if wall collision will occur
+				# determine displacement left to collide with wall
+				delta_x, delta_y = self.cm.vel_to_wall(item,hit_wall,SCENE_HEIGHT,SCENE_WIDTH)
+				# set object's velocity after impacting the wall
+				self.cm.ball_to_wall(item,hit_wall)
+			else:
+				#keep the ball in the same trajectory
+				delta_x = item.x_vel
+				delta_y = item.y_vel
 
 		# next x/y destination of the item in LOCAL coordinates
         # require the offsets (-item.x_start and -item.y_start)

@@ -4,7 +4,8 @@
 	on the board. This class handles both 
 	ball-to-wall and ball-to-ball collisions.
 """
-import math
+import math, time
+from ball import Ball
 
 
 class collisionManager():
@@ -52,8 +53,21 @@ class collisionManager():
 		delta_x = b2.x_pos - b1.x_pos
 		delta_y = b2.y_pos - b1.y_pos
 		
+		if (b1.equals(b2)):
+			print 'You gave me the same balls!'
+
+		#time.sleep(5)
+		print '\nInside normalUnit_vct()'
+		print ('Ball1: ' + str(b1) + ' Ball2: ' + str(b2))
+		print ('Delta x/y: ' + str(delta_x) + ' and ' + str(delta_y))
 		magnitude = (float)(math.sqrt(delta_x**2 + delta_y**2))
-		normalUnit_vct = (delta_x / magnitude, delta_y / magnitude)
+		#time.sleep(5)
+		print('Magnitude: ' + str(magnitude))
+		try:
+			normalUnit_vct = (delta_x / magnitude, delta_y / magnitude)
+		except Exception:
+			print 'Division by zero.'
+			time.sleep(5)	
 		return normalUnit_vct
 
 	""" returns tuple containing tangent vector
@@ -121,12 +135,12 @@ class collisionManager():
 	"""
 	def if_ball_collision(self, b1, balls):
 
-		ball_collided = False
+		self.ball_collisions = []
 
 		if (len(balls) > 1):	# if list includes other balls
 
 			for b2 in balls:
-				if (b1 != b2):	# not checking itself
+				if (not (b1.equals(b2))):	# not checking itself
 
 					# determine the next position for both balls
 					b1_next_x = b1.x_pos + b1.radius + b1.x_vel
@@ -146,22 +160,23 @@ class collisionManager():
 					#print 'distance: ' + str(distance) + 'radius1: ' + str(b1.radius) + \
 					#	'radius2: ' + str(b2.radius)
 					if (distance < b1.radius + b2.radius):
-						print 'distance: '+str(distance)
-						print 'b1: '+str((b1.x_pos,b1.y_pos))
-						print 'b2: '+str((b2.x_pos,b2.y_pos))
+						# print 'distance: '+str(distance)
+						# print 'b1: '+str((b1.x_pos,b1.y_pos))
+						# print 'b2: '+str((b2.x_pos,b2.y_pos))
 
-						# attach two balls to list of collisions
-						self.ball_collisions.append((b1,b2))
-						ball_collided = True
-						print 'ITEM ADDED TO THE LIST'
+						# attach ball to list of collisions
+						self.ball_collisions.append(b2)
+				else: pass
+					# print 'These two %s and %s are equal' % (str(b1),str(b2))
 
-		return ball_collided
+		# print ('List of length: ' + str(len(self.ball_collisions)))
+		return self.ball_collisions
 
 	def vel_to_ball(self, b1, b2):
 
 		difference_x = (b2.x_pos + b2.radius) - (b1.x_pos + b1.radius)
 		difference_y = (b2.y_pos + b2.radius) - (b1.y_pos + b1.radius)
-		print '\n(' + str(difference_x) + ',' + str(difference_y) + ')'
+		# print '\n(' + str(difference_x) + ',' + str(difference_y) + ')'
 
 		# calculate distance so that their edges touch
 		dist = float(math.sqrt(difference_x**2 + difference_y**2))
@@ -170,15 +185,20 @@ class collisionManager():
 		# used to later determine magnitude of x/y shifts
 		angle = math.atan2(b1.y_vel,b1.x_vel)
 
-		# used to determine how much to move in either x/y directions
-		b1b2_ratio_x = abs( float(b1.x_vel) / (abs(b1.x_vel) + abs(b2.x_vel)) )
-		b1b2_ratio_y = abs( float(b1.y_vel) / (abs(b1.y_vel) + abs(b2.y_vel)) )
+		# # used to determine how much to move in either x/y directions
+		# b1b2_ratio_x = abs( float(b1.x_vel) / (abs(b1.x_vel) + abs(b2.x_vel)) )
+		# b1b2_ratio_y = abs( float(b1.y_vel) / (abs(b1.y_vel) + abs(b2.y_vel)) )
+
+		# # calculate the displacement needed for ball 'b1'
+		# b1_x_displacement = (dist * b1b2_ratio_x) * math.cos(angle)
+		# b1_y_displacement = (dist * b1b2_ratio_y) * math.sin(angle)
 
 		# calculate the displacement needed for ball 'b1'
-		b1_x_displacement = (dist * b1b2_ratio_x) * math.cos(angle)
-		b1_y_displacement = (dist * b1b2_ratio_y) * math.sin(angle)
+		b1_x_displacement = (dist) * math.cos(angle)
+		b1_y_displacement = (dist) * math.sin(angle)
 
-		print 'displacements: ' +str(b1_x_displacement)+' '+str(b1_y_displacement)
+
+		# print 'displacements: ' +str(b1_x_displacement)+' '+str(b1_y_displacement)
 		return b1_x_displacement, b1_y_displacement
 
 

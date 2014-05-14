@@ -78,8 +78,8 @@ class ServerThread(threading.Thread):
 			if (not self.tcp_main_queue.empty()):
 				# if message, broadcast to all client threads
 				item = self.tcp_main_queue.get()
-				self.tcp_sim_queue.put(item)
 				self.broadcast(item)
+				self.tcp_sim_queue.put(item)
 				print ('Broadcast: ' + item)
 			elif (not self.client_queue.empty()):
 				item = self.client_queue.get()

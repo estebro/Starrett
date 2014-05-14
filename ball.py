@@ -18,7 +18,6 @@ class Ball(QGraphicsEllipseItem):
 		self.x_start = x_pos
 		self.y_start = y_pos
 
-
 		self.radius = radius
 		self.mass = mass
 
@@ -36,6 +35,15 @@ class Ball(QGraphicsEllipseItem):
 	def set_velocity(self, x_vel, y_vel):
 		self.x_vel = x_vel
 		self.y_vel = y_vel
+
+	def equals(self, ball):
+		
+		if((self.x_pos == ball.x_pos) and (self.y_pos == ball.y_pos)):
+			if((self.x_vel == ball.x_vel) and (self.y_vel == ball.y_vel)):
+				if((self.radius == ball.radius) and (self.mass == ball.mass)):
+					return True
+
+		return False
 
 	def __str__(self):
 		return 'x' + str(self.x_pos) + 'y' + str(self.y_pos) + 'xv' + str(self.x_vel) + \
