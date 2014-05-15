@@ -53,21 +53,16 @@ class collisionManager():
 		delta_x = b2.x_pos - b1.x_pos
 		delta_y = b2.y_pos - b1.y_pos
 		
-		if (b1.equals(b2)):
-			print 'You gave me the same balls!'
-
-		#time.sleep(5)
-		print '\nInside normalUnit_vct()'
-		print ('Ball1: ' + str(b1) + ' Ball2: ' + str(b2))
-		print ('Delta x/y: ' + str(delta_x) + ' and ' + str(delta_y))
+		# print '\nInside normalUnit_vct()'			#DEBUG
+		# print ('Ball1: ' + str(b1) + ' Ball2: ' + str(b2))
+		# print ('Delta x/y: ' + str(delta_x) + ' and ' + str(delta_y))
 		magnitude = (float)(math.sqrt(delta_x**2 + delta_y**2))
-		#time.sleep(5)
-		print('Magnitude: ' + str(magnitude))
-		try:
-			normalUnit_vct = (delta_x / magnitude, delta_y / magnitude)
-		except Exception:
-			print 'Division by zero.'
-			time.sleep(5)	
+		# print('Magnitude: ' + str(magnitude))
+		# try:
+		normalUnit_vct = (delta_x / magnitude, delta_y / magnitude)
+		# except Exception:
+		# 	print 'Division by zero.'
+		# 	time.sleep(5)	
 		return normalUnit_vct
 
 	""" returns tuple containing tangent vector
@@ -197,8 +192,17 @@ class collisionManager():
 		b1_y_displacement = (dist) * math.sin(angle)
 
 
+		if (min(b1_x_displacement,b1_y_displacement) == b1_x_displacement):	# x is min
+			delta_x = b1_x_displacement
+			x_ratio = b1_x_displacement / float(b1.x_vel)
+			delta_y = int(x_ratio * b1.y_vel)
+		else:		# y is min
+			delta_y = b1_y_displacement
+			y_ratio = b1_y_displacement / float(b1.y_vel)
+			delta_x = int(y_ratio * b1.x_vel)
 		# print 'displacements: ' +str(b1_x_displacement)+' '+str(b1_y_displacement)
-		return b1_x_displacement, b1_y_displacement
+		# return b1_x_displacement, b1_y_displacement
+		return delta_x, delta_y
 
 
 	""" determines whether a collision has occurred between a ball

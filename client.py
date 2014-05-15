@@ -2,11 +2,10 @@ import time, socket, threading, pickle
 
 class ClientThread(threading.Thread):
 
-	def __init__(self, data, sim_queue, event):
+	def __init__(self, sim_queue, event):
 		threading.Thread.__init__(self)
 		self.host = '127.0.0.1'
 		self.port = 3333
-		self.data_send = data
 		self.data_recv = ''
 		self.tcp_sim_queue = sim_queue
 		self.thread_event = event
@@ -19,8 +18,6 @@ class ClientThread(threading.Thread):
 
 	def run(self):
 		
-
-		time.sleep(1)
 		print 'Success. SERVER: %s' % (self.s.recv(2048))	# server welcome
 
 		while (not self.thread_event.is_set()):

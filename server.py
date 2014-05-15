@@ -40,7 +40,6 @@ class ServerThread(threading.Thread):
 				# retrieve ip and port from client socket
 				(clientsock, (ip,port)) = client.accept()
 				
-				print 'Made it here'
 				# initiate client thread on server
 				newthread = ServeClientThread(ip,port,clientsock,self.client_queue)
 				newthread.daemon = True
@@ -51,11 +50,6 @@ class ServerThread(threading.Thread):
 				self.manager.addClientThread(newthread)
 				print '\nListening for incoming connections...'
 			
-
-	# sends data to all tcp clients
-	def broadcast(self,msg):
-		for t in self.threads:
-			t.socket.send(msg)
 
 	# returns the name of the thread
 	def __str__(self):

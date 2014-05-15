@@ -17,14 +17,12 @@ class BroadcastThread(threading.Thread):
 	def run(self):
 
 		while True:
-			# if any clients are connected
-			if (len(self.threads) > 0):
-				# if there's a message on queue
-				if (not self.simulation_queue.empty()):
-					item = self.simulation_queue.get()	# retrieve message
-					serialized = pickle.dumps(item)
-					self.updateSimulation(serialized)
-					print ('Broadcast: ' + str(item))		#DEBUG
+			
+			# retrieve message from simulation queue
+			item = self.simulation_queue.get()
+			serialized = pickle.dumps(item)
+			self.updateSimulation(serialized)
+			# print ('Broadcast: ' + str(item))		#DEBUG
 
 
 	# stores new thread serving client

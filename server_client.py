@@ -20,16 +20,16 @@ class ServeClientThread(threading.Thread):
 		print 'Connection from: '+str(self.ip)+':'+str(self.port)
 
 		self.socket.send('Welcome to the server.')
-		data = 'START'
+		# data = 'START'
 		
-		while True:		# loop while socket is alive
-			try:
-				while (data != ''):			# wait for data from client
-					if (data != 'START'):	# check for starting condition
-						print 'Client ('+str(self.port)+') sent: '+data+'.'
-						self.server_queue.put(data)		# pass data to server main thread
-					data = self.socket.recv(2048)	# read more data
-			except Exception:	# handle broken connection
-				print 'Client ('+str(self.port)+') disconnected.'
-				self.socket.close()		# properly close socket
-				break 		# exit wait-loop
+		# while True:		# loop while socket is alive
+		# 	try:
+		# 		while (data != ''):			# wait for data from client
+		# 			if (data != 'START'):	# check for starting condition
+		# 				print 'Client ('+str(self.port)+') sent: '+data+'.'
+		# 				self.server_queue.put(data)		# pass data to server main thread
+		# 			data = self.socket.recv(2048)	# read more data
+		# 	except Exception:	# handle broken connection
+		# 		print 'Client ('+str(self.port)+') disconnected.'
+		# 		self.socket.close()		# properly close socket
+		# 		break 		# exit wait-loop

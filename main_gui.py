@@ -35,6 +35,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.tcp_sim_queue = Queue.Queue()
         self.thread_event = threading.Event()
         self.data = "meaningless"
+        self.custom_data = ''
 
         self.cm = SceneManager(self.graphicsView)
 
@@ -63,7 +64,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             # create a timeline (1 sec here)
             timeline = QTimeLine(100)
-            timeline.setFrameRange(0,100)   # 200 steps
+            timeline.setFrameRange(0,200)   # 200 steps
 
             #item should at 'x,y' by time 't's
             animation.setPosAt(t,QPointF(x,y))
@@ -73,11 +74,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return animation
 
         if (self.run):   # still running
-
-            # if (self.mode != None and str(self.mode) == 'CLIENT'):
-            #     print 'Deleting previous animation.'
-            #     time.sleep(0.0025)
-            #     self.cm.deleteItems()
 
             # check for items received via tcp
             if (not self.tcp_sim_queue.empty()):
@@ -89,7 +85,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     self.cm.addItem(msg)
                 else:
                     self.cm.addItems(msg)
-            else: pass
+            elif (self.custom_data != ''):     # data received from GUI
+                # print 'self.custom_data is %s' % self.custom_data     #DEBUG
+                self.cm.addItem(self.custom_data)
+                self.custom_data = ''
 
 
             if (str(self.mode) == 'SERVER'):
@@ -133,12 +132,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         
         try:
             # initiate client thread and pass simulation GUI message queue
-            self.mode = ClientThread(self.data,self.tcp_sim_queue,self.thread_event)
+            self.mode = ClientThread(self.tcp_sim_queue,self.thread_event)
             self.mode.daemon = True     # thread to close when main thread closes
             self.mode.start()
 
-            # disable all but 'Start Client' and 'Stop' buttons
+            # disable all buttons except 'Stop'
             self.btn_start_server.setEnabled(False)
+            self.btn_start_client.setEnabled(False)
             self.btn_random_ball.setEnabled(False)
             self.btn_custom_ball.setEnabled(False)
         except Exception:
@@ -161,8 +161,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def randomBall(self):
 
         # select random radius, mass, x/y velocities
-        mass = random.randint(5, 40)
-        radius = int(mass * 1.5)
+        mass = random.randint(5, 20)
+        radius = int(mass * 2)
         x_vel = random.randint(1,30)
         y_vel = random.randint(1,30)
 
@@ -175,7 +175,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                     'yv' + str(y_vel) + 'm' + str(mass) + 'r' + str(radius)
 
         # self.tcp_main_queue.put(self.data)
-        self.tcp_sim_queue.put(self.data)
+        # self.tcp_sim_queue.put(self.data)
+        self.custom_data = self.data
 
     def customBall(self):
         # create dialog for input
@@ -192,9 +193,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for i in range(0,len(self.input_values)):
             self.data += params[i] + str(self.input_values[i])
 
-        # input in queue for tcp thread
+        # # input in queue for tcp thread
         if (len(self.data) > 0):
-            self.tcp_main_queue.put(self.data)
+            self.custom_data = self.data
+            # self.tcp_main_queue.put(self.data)
         
 
 

@@ -76,10 +76,10 @@ class SceneManager():
 		collisions = self.cm.if_ball_collision(item,self.getItems())
 		
 		if (len(collisions) > 0):	# colllision identified
-			print '\nInside next_move()'
-			print ('Item: ' + str(item) + ' List: ' )#+ str(collisions))
-			for ball in collisions:
-				print str(ball)
+			# print '\nInside next_move()'
+			# print ('Item: ' + str(item) + ' List: ' )#+ str(collisions))
+			# for ball in collisions:
+			# 	print str(ball)				#DEBUG
 			# obtain velocities so that balls just collide
 			delta_x, delta_y = self.cm.vel_to_ball(item,collisions[0])
 			# delta_x = item.x_vel
