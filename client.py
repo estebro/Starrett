@@ -1,68 +1,44 @@
-import time, socket, threading
+import time, socket, threading, pickle
 
 class ClientThread(threading.Thread):
 
-	def __init__(self, data, main_queue, sim_queue, event):
+	def __init__(self, data, sim_queue, event):
 		threading.Thread.__init__(self)
 		self.host = '127.0.0.1'
 		self.port = 3333
 		self.data_send = data
 		self.data_recv = ''
-		self.tcp_main_queue = main_queue
 		self.tcp_sim_queue = sim_queue
 		self.thread_event = event
 
 		# setting up the socket (non-blocking)
 		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.s.connect((self.host,self.port))
-		self.s.setblocking(0)
+		self.s.setblocking(1)
 
-	# send data via existing tcp socket
-	def sendUpdate(self, data):
-		self.data_send = data
-		self.s.send(self.data_send)	# send data
-
-	# receive data via existing tcp socket
-	def checkForUpdate(self):
-		self.data_recv = self.s.recv(1024)
-		return self.data_recv
-
-	# close existing tcp socket
-	def closeConnection(self):
-		self.s.close()
-
-	# parses values into a string to be sent via tcp
-	def encode(self,x,y,xv,yv,m,r):
-		msg = 'x'+str(x)+'y'+str(y)+'xv'+str(xv)+'yv'+str(yv)+'m'+str(m)+'r'+str(r)
-		return msg
 
 	def run(self):
 		
-		# request to be caught up with simulation
-		#self.sendUpdate("UPDATE_ME")	# send to server
+
+		time.sleep(1)
+		print 'Success. SERVER: %s' % (self.s.recv(2048))	# server welcome
 
 		while (not self.thread_event.is_set()):
 			try:
-				self.checkForUpdate()	# retrieve data from server
-				print ('Received scenario update: ' + self.data_recv)
-				if (self.data_recv != 'Welcome to the server.'):
-					# pass this to thread handling physics
-					self.tcp_sim_queue.put(self.data_recv)
+				tcp_received = self.s.recv(2048)		# data received via tcp
+				obj_list = pickle.loads(tcp_received)	# unserialize data
+
+				# print 'Unloaded: %s' % obj_list 	#DEBUG
+
+				# pass simulation data from server to GUI thread
+				self.tcp_sim_queue.put(obj_list)
 			except Exception:
-				if (not self.tcp_main_queue.empty()):
-					# retrieves input from thread queue
-					self.data_send = self.tcp_main_queue.get()	# waits if none
-					try:	# attempts to send data to server
-						self.sendUpdate(self.data_send)	# to server
-						print 'Data sent @ tcp_client: ' + self.data_send
-					except Exception:
-						print '\nConnection with server has been lost.'
-						break 	# finish thread execution
+				print 'Socket error occurred.'
+				break
 
-		print 'Thread has been closed.'
-
-
-								
+		# returns name of thread
+		def __str__(self):
+			return 'CLIENT'
 
 if __name__ == '__main__':
 	client = ClientThread()

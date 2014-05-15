@@ -1,3 +1,7 @@
+from PySide.QtGui import (QGraphicsScene)
+from ball import Ball
+from collisionManager import collisionManager
+
 """
 	Responsible for setting up the QGraphicsScene which populates
 	the QGraphicsView used to display the animation of all 
@@ -5,24 +9,19 @@
 
 """
 
-from PySide.QtGui import (QGraphicsScene)
-from ball import Ball
-from collisionManager import collisionManager
-
 # graphicsView dimensions
 SCENE_WIDTH = 579
 SCENE_HEIGHT = 309
 
 class SceneManager():
 	
-	def __init__(self, graphicsView, queue):
+	def __init__(self, graphicsView):
 		self.scene = QGraphicsScene()
 		self.scene.setSceneRect(0,0,SCENE_WIDTH,SCENE_HEIGHT)
 		graphicsView.setScene(self.scene)
 
 		# handles physics involved in collisiions/detection
 		self.cm = collisionManager()
-		self.sim_queue = queue  # to receive data from threads
 
 	# add object to simulation scene (given parameters)
 	# input:	'values'  contains (x,y,x_vel,y_vel,mass,radius)
@@ -31,6 +30,13 @@ class SceneManager():
 		item = Ball(values[0],values[1],values[4],values[5])
 		item.set_velocity(values[2],values[3])
 		self.scene.addItem(item)
+
+	def addItems(self,items):
+		for item in items:
+			values = self.decode(item)
+			ball_obj = Ball(values[0],values[1],values[4],values[5])
+			ball_obj.set_velocity(values[2],values[3])
+			self.scene.addItem(ball_obj)
 
 	# translate parameters received by TCP
 	def decode(self,msg):
@@ -41,7 +47,7 @@ class SceneManager():
 		for i in range(len(delims)):
 			index = msg.index(delims[i])			# search for delimeter
 			arg = msg[index + len(delims[i]) :]		# extract value
-			values.append(int(arg))					# store value
+			values.append(int(float(arg)))					# store value
 			msg = msg[:index]				# reduce message left to parse
 		
 		values.reverse()
@@ -50,6 +56,18 @@ class SceneManager():
 	# access all items in the simulation scene
 	def getItems(self):
 		return self.scene.items()
+
+	def deleteItems(self):
+		return self.scene.clear()
+
+	def getItemsForTCP(self):
+		items = self.scene.items()
+		tcp_list = []
+
+		for item in items:
+			tcp_list.append(str(item))
+
+		return tcp_list
 
 	# determine an item's next location
 	def next_move(self,item):

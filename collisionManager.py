@@ -147,7 +147,6 @@ class collisionManager():
 					b2_next_x = b2.x_pos + b2.radius + b2.x_vel
 					b1_next_y = b1.y_pos + b1.radius + b1.y_vel
 					b2_next_y = b2.y_pos + b2.radius + b2.y_vel
-
 					delta_x = b2_next_x - b1_next_x
 					delta_y = b2_next_y - b1_next_y
 
